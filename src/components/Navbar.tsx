@@ -15,7 +15,7 @@ const Navbar = () => {
                 alt="Nike Logo"
                 width={60}
                 height={24}
-                className="h-6 w-auto"
+                className="h-6 w-auto filter brightness-0"
               />
             </Link>
           </div>
