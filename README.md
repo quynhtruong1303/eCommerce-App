@@ -1,36 +1,146 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Nike eCommerce App
+
+A modern eCommerce application built with Next.js, TypeScript, TailwindCSS, Better Auth, Neon PostgreSQL, Drizzle ORM, and Zustand.
+
+## Features
+
+- 🛍️ Product catalog with Nike items
+- 🗄️ PostgreSQL database with Drizzle ORM
+- 🔐 Authentication with Better Auth
+- 🎨 Modern UI with TailwindCSS
+- 📱 Responsive design
+- 🛒 Shopping cart with Zustand state management
+- ⚡ Server-side rendering with Next.js 15
+
+## Tech Stack
+
+- **Frontend**: Next.js 15, React 19, TypeScript
+- **Styling**: TailwindCSS
+- **Database**: Neon PostgreSQL
+- **ORM**: Drizzle ORM
+- **Authentication**: Better Auth
+- **State Management**: Zustand
+- **Deployment**: Vercel (recommended)
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+
+- Node.js 18+
+- A Neon PostgreSQL database
+- npm or yarn
+
+### Installation
+
+1. Clone the repository:
+
+```bash
+git clone <your-repo-url>
+cd nike-ecommerce
+```
+
+2. Install dependencies:
+
+```bash
+npm install
+```
+
+3. Set up environment variables:
+
+```bash
+cp .env.local.example .env.local
+```
+
+4. Update `.env.local` with your database credentials:
+
+```env
+DATABASE_URL="postgresql://username:password@ep-xxx.us-east-1.aws.neon.tech/neondb?sslmode=require"
+BETTER_AUTH_SECRET="your-secret-key-here"
+BETTER_AUTH_URL="http://localhost:3000"
+```
+
+### Database Setup
+
+1. Generate and run migrations:
+
+```bash
+npm run db:generate
+npm run db:push
+```
+
+2. Seed the database with sample Nike products:
+
+```bash
+npm run db:seed
+```
+
+### Development
+
+Start the development server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) to view the application.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Available Scripts
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm run start` - Start production server
+- `npm run lint` - Run ESLint
+- `npm run db:generate` - Generate database migrations
+- `npm run db:push` - Push schema changes to database
+- `npm run db:seed` - Seed database with sample data
 
-## Learn More
+## Project Structure
 
-To learn more about Next.js, take a look at the following resources:
+```
+src/
+├── app/                    # Next.js app directory
+│   ├── api/               # API routes
+│   │   └── auth/          # Better Auth API routes
+│   └── page.tsx           # Homepage
+├── components/            # React components
+│   └── ProductCard.tsx    # Product card component
+├── lib/                   # Utility libraries
+│   ├── auth.ts           # Better Auth configuration
+│   ├── db/               # Database configuration
+│   │   ├── index.ts      # Database connection
+│   │   └── schema.ts     # Database schema
+│   └── store/            # Zustand stores
+│       └── productStore.ts
+scripts/
+└── seed.ts               # Database seeding script
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Database Schema
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+The application uses a single `products` table with the following structure:
 
-## Deploy on Vercel
+- `id` - Primary key
+- `name` - Product name
+- `description` - Product description
+- `price` - Product price (decimal)
+- `imageUrl` - Product image URL
+- `category` - Product category
+- `brand` - Product brand (defaults to Nike)
+- `size` - Product size
+- `color` - Product color
+- `stock` - Available stock quantity
+- `isActive` - Whether product is active
+- `createdAt` - Creation timestamp
+- `updatedAt` - Last update timestamp
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Contributing
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests if applicable
+5. Submit a pull request
+
+## License
+
+This project is licensed under the MIT License.
