@@ -1,7 +1,11 @@
 import React from "react";
 import { Card} from "@/components";
+import { getCurrentUser } from "@/lib/auth/actions";
 
-const Home = () => {
+const Home = async () => {
+  const user = await getCurrentUser();
+  console.log('USER: ', user);
+
   const latestShoes = [
     {
       title: "Air Jordan 1 Retro High OG",
