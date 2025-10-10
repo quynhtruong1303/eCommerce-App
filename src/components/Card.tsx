@@ -18,7 +18,6 @@ const Card: React.FC<CardProps> = ({
   title,
   price,
   originalPrice,
-  meta,
   image,
   imageAlt,
   category,
@@ -77,7 +76,7 @@ const Card: React.FC<CardProps> = ({
 
         <div className="flex flex-col gap-1">
           <p className="text-caption font-jost text-dark-700">{category}</p>
-          <p className="text-caption font-jost text-dark-700">{meta}</p>
+          <p className="text-caption font-jost text-dark-700">6 Colour</p>
         </div>
       </div>
     </div>
