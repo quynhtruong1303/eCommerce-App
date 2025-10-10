@@ -1,9 +1,9 @@
 import React from 'react'
-import Link from 'next/link'
 import AuthForm from '@/components/AuthForm'
+import { signIn } from '@/lib/auth/actions'
 
 export default function SignInPage() {
     return (
-        <div><AuthForm type="sign-in" /></div>
+        <div><AuthForm mode="sign-in" onSubmit={signIn} /></div>
     )
 }

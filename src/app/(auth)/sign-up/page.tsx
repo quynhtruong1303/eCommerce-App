@@ -1,9 +1,9 @@
 import React from 'react'
-import Link from 'next/link'
 import AuthForm from '@/components/AuthForm'
+import { signUp } from '@/lib/auth/actions'
 
 export default function SignUpPage() {
   return (
-    <div><AuthForm type="sign-up"/></div>
+    <div><AuthForm mode="sign-up" onSubmit={signUp}/></div>
   )
 }

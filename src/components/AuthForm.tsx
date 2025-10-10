@@ -1,198 +1,147 @@
-'use client';
+"use client";
 
-import React, { useState, useTransition } from 'react';
-import SocialProviders from './SocialProviders';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { Mail, Lock, User, Eye, EyeOff } from 'lucide-react';
-import { signIn, signUp } from '@/lib/auth/actions';
+import { useState } from "react";
+import Link from "next/link";
+import SocialProviders from "./SocialProviders";
+import {useRouter} from "next/navigation";
 
-interface AuthFormProps {
-  type: 'sign-in' | 'sign-up';
-}
+type Props = {
+  mode: "sign-in" | "sign-up";
+  onSubmit: (formData: FormData) => Promise<{ ok: boolean; userId?: string } | void>;
+};
 
-export default function AuthForm({ type }: AuthFormProps) {
-  const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState('');
-  const [isPending, startTransition] = useTransition();
+export default function AuthForm({ mode, onSubmit }: Props) {
+  const [show, setShow] = useState(false);
   const router = useRouter();
-
-  const isSignUp = type === 'sign-up';
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setError('');
 
     const formData = new FormData(e.currentTarget);
 
-    startTransition(async () => {
-      try {
-        const result = isSignUp 
-          ? await signUp(formData) 
-          : await signIn(formData);
+    try {
+      const result = await onSubmit(formData);
 
-        if (result.error) {
-          setError(result.error);
-        } else if (result.success) {
-          // Redirect to home page on success
-          router.push('/');
-          router.refresh();
-        }
-      } catch (err) {
-        setError('An unexpected error occurred. Please try again.');
-      }
-    });
-  };
+      if(result?.ok) router.push("/");
+    } catch (e) {
+      console.log("error", e);
+    }
+  }
 
   return (
     <div className="space-y-6">
+
+      {/* Welcome Message */}
       <div className="text-center">
         <p className="text-caption text-dark-700">
-          {isSignUp ? "Already have an account? " : "Don't have an account? "}
-          <Link href={isSignUp ? '/sign-in' : '/sign-up'} className="underline">
-            {isSignUp ? 'Sign In' : 'Sign Up'}
+          {mode === "sign-in" ? "Don’t have an account? " : "Already have an account? "}
+          <Link href={mode === "sign-in" ? "/sign-up" : "/sign-in"} className="underline">
+            {mode === "sign-in" ? "Sign Up" : "Sign In"}
           </Link>
         </p>
-        <h1 className="mt-3 text-heading-3 text-dark-900 font-medium">
-          {isSignUp ? 'Join Nike Today!' : 'Welcome Back!'}
+        <h1 className="mt-3 text-heading-3 text-dark-900">
+          {mode === "sign-in" ? "Welcome Back!" : "Join Nike Today!"}
         </h1>
         <p className="mt-1 text-body text-dark-700">
-          {isSignUp 
-            ? 'Create your account to start your fitness journey' 
-            : 'Sign in to continue your journey'}
+          {mode === "sign-in"
+            ? "Sign in to continue your journey"
+            : "Create your account to start your fitness journey"}
         </p>
       </div>
-
+      
       {/* Social Providers */}
-      <SocialProviders />
+      <SocialProviders variant={mode} />
 
-      {/* Divider */}
-      <div className="relative">
-        <div className="absolute inset-0 flex items-center">
-          <div className="w-full border-t border-light-300"></div>
-        </div>
-        <div className="relative flex justify-center text-caption">
-          <span className="px-4 bg-light-200 text-dark-700 font-jost">
-            Or {isSignUp ? 'sign up' : 'sign in'} with
-          </span>
-        </div>
+      <div className="flex items-center gap-4">
+        <hr className="h-px w-full border-0 bg-light-300" />
+        <span className="shrink-0 text-caption text-dark-700">
+          Or {mode === "sign-in" ? "sign in" : "sign up"} with
+        </span>
+        <hr className="h-px w-full border-0 bg-light-300" />
       </div>
-
-      {/* Error Message */}
-      {error && (
-        <div className="bg-red/10 border border-red text-red px-4 py-3 rounded-lg text-body">
-          {error}
-        </div>
-      )}
-
+      
       {/* Email/Password Form */}
-      <form onSubmit={handleSubmit} className="space-y-5">
+      <form
+        className="space-y-4"
+        onSubmit={handleSubmit}
+      >
         {/* Full name input - Sign up only */}
-        {isSignUp && (
-          <div>
-            <label 
-              htmlFor="name" 
-              className="block text-body-medium font-jost font-medium text-dark-900 mb-2"
-            >
-              Full Name
+        {mode === "sign-up" && (
+          <div className="space-y-1">
+            <label htmlFor="name" className="text-caption text-dark-900">
+              Name
             </label>
-            <div className="relative">
-              <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-dark-700" />
-              <input 
-                id="name"
-                name="name"
-                type="text"
-                required
-                placeholder="Enter your full name"
-                disabled={isPending}
-                className="w-full pl-12 pr-4 py-3 border-2 border-light-300 rounded-lg focus:border-dark-900 focus:outline-none transition-colors duration-200 text-body font-jost disabled:opacity-50"
-              />
-            </div>
+            <input
+              id="name"
+              name="name"
+              type="text"
+              placeholder="Enter your name"
+              className="w-full rounded-xl border border-light-300 bg-light-100 px-4 py-3 text-body text-dark-900 placeholder:text-dark-500 focus:outline-none focus:ring-2 focus:ring-dark-900/10"
+              autoComplete="name"
+            />
           </div>
         )}
 
         {/* Email Input */}
-        <div>
-          <label 
-            htmlFor="email" 
-            className="block text-body-medium font-jost font-medium text-dark-900 mb-2"
-          >
+        <div className="space-y-1">
+          <label htmlFor="email" className="text-caption text-dark-900">
             Email
           </label>
-          <div className="relative">
-            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-dark-700" />
-            <input 
-              id="email"
-              name="email"
-              type="email"
-              required
-              placeholder="johndoe@gmail.com"
-              disabled={isPending}
-              className="w-full pl-12 pr-4 py-3 border-2 border-light-300 rounded-lg focus:border-dark-900 focus:outline-none transition-colors duration-200 text-body font-jost disabled:opacity-50"
-            />
-          </div>
+          <input
+            id="email"
+            name="email"
+            type="email"
+            placeholder="johndoe@gmail.com"
+            className="w-full rounded-xl border border-light-300 bg-light-100 px-4 py-3 text-body text-dark-900 placeholder:text-dark-500 focus:outline-none focus:ring-2 focus:ring-dark-900/10"
+            autoComplete="email"
+            required
+          />
         </div>
-
+        
         {/* Password input */}
-        <div>
-          <label 
-            htmlFor="password" 
-            className="block text-body-medium font-jost font-medium text-dark-900 mb-2"
-          >
+        <div className="space-y-1">
+          <label htmlFor="password" className="text-caption text-dark-900">
             Password
           </label>
           <div className="relative">
-            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-dark-700" />
-            <input 
+            <input
               id="password"
               name="password"
-              type={showPassword ? 'text' : 'password'}
+              type={show ? "text" : "password"}
+              placeholder="minimum 8 characters"
+              className="w-full rounded-xl border border-light-300 bg-light-100 px-4 py-3 pr-12 text-body text-dark-900 placeholder:text-dark-500 focus:outline-none focus:ring-2 focus:ring-dark-900/10"
+              autoComplete={mode === "sign-in" ? "current-password" : "new-password"}
+              minLength={8}
               required
-              placeholder="Enter your password"
-              disabled={isPending}
-              className="w-full pl-12 pr-12 py-3 border-2 border-light-300 rounded-lg focus:border-dark-900 focus:outline-none transition-colors duration-200 text-body font-jost disabled:opacity-50"
             />
             <button
               type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              disabled={isPending}
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-dark-700 hover:text-dark-900 transition-colors disabled:opacity-50"
-              aria-label={showPassword ? 'Hide password' : 'Show password'}
+              className="absolute inset-y-0 right-0 px-3 text-caption text-dark-700"
+              onClick={() => setShow((v) => !v)}
+              aria-label={show ? "Hide password" : "Show password"}
             >
-              {showPassword ? (
-                <EyeOff className="w-5 h-5" />
-              ) : (
-                <Eye className="w-5 h-5" />
-              )}
+              {show ? "Hide" : "Show"}
             </button>
           </div>
-          {isSignUp && (
-            <p className="mt-2 text-footnote font-jost text-dark-700">
-              Use 8 or more characters with a mix of letters, numbers & symbols
-            </p>
-          )}
         </div>
 
         {/* Submit Button */}
-        <button 
+        <button
           type="submit"
-          disabled={isPending}
-          className="w-full py-3 bg-dark-900 text-light-100 text-body-medium font-jost font-bold rounded-lg hover:bg-dark-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="mt-2 w-full rounded-full bg-dark-900 px-6 py-3 text-body-medium text-light-100 hover:bg-dark-700 focus:outline-none focus:ring-2 focus:ring-dark-900/20"
         >
-          {isPending 
-            ? (isSignUp ? 'Creating Account...' : 'Signing In...') 
-            : (isSignUp ? 'Sign Up' : 'Sign In')}
+          {mode === "sign-in" ? "Sign In" : "Sign Up"}
         </button>
 
         {/* Terms and Privacy - Sign up only */}
-        {isSignUp && (
-          <p className="text-footnote font-jost text-center text-dark-900">
-            By signing up, you agree to our{' '}
-            <a href="#" className="text-dark-900 underline hover:no-underline font-medium">
+        {mode === "sign-up" && (
+          <p className="text-center text-footnote text-dark-700">
+            By signing up, you agree to our{" "}
+            <a href="#" className="underline">
               Terms of Service
-            </a>{' '}
-            and{' '}
-            <a href="#" className="text-dark-900 underline hover:no-underline font-medium">
+            </a>{" "}
+            and{" "}
+            <a href="#" className="underline">
               Privacy Policy
             </a>
           </p>

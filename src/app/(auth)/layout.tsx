@@ -8,7 +8,7 @@ export default function AuthLayout ({
     return (
         <div className="min-h-screen bg-light-200 flex">
             { /* Left side - Brand section */ }
-            <div className="hidden lg:flex lg:w-1/2 bg-dark-900 text-light-100 p-12 flex-col justify-between realtive overflow-hidden">
+            <div className="hidden lg:flex lg:w-1/2 bg-dark-900 text-light-100 p-12 flex-col justify-between relative overflow-hidden">
                 { /* Nike logo */ }
                 <div className="relative z-10">
                     <svg width="80" height="29" viewBox="0 0 80 29" fill="none" xmlns="http://www.w3.org/2000/svg">
