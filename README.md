@@ -103,35 +103,59 @@ src/
 │   │   └── auth/          # Better Auth API routes
 │   └── page.tsx           # Homepage
 ├── components/            # React components
-│   └── ProductCard.tsx    # Product card component
 ├── lib/                   # Utility libraries
 │   ├── auth.ts           # Better Auth configuration
 │   ├── db/               # Database configuration
 │   │   ├── index.ts      # Database connection
-│   │   └── schema.ts     # Database schema
+│   │   ├── seed.ts       # Database seeding script
+│   │   └── schema/       # Database schemas
+│   │       ├── index.ts  # Schema exports
+│   │       ├── filters/  # Filter schemas (genders, colors, sizes)
+│   │       ├── products.ts
+│   │       ├── variants.ts
+│   │       ├── brands.ts
+│   │       ├── categories.ts
+│   │       ├── orders.ts
+│   │       └── ...       # Other schemas
 │   └── store/            # Zustand stores
-│       └── productStore.ts
-scripts/
-└── seed.ts               # Database seeding script
+└── ...
 ```
 
 ## Database Schema
 
-The application uses a single `products` table with the following structure:
+The application uses a **normalized database schema** with the following tables:
 
-- `id` - Primary key
-- `name` - Product name
-- `description` - Product description
-- `price` - Product price (decimal)
-- `imageUrl` - Product image URL
-- `category` - Product category
-- `brand` - Product brand (defaults to Nike)
-- `size` - Product size
-- `color` - Product color
-- `stock` - Available stock quantity
-- `isActive` - Whether product is active
-- `createdAt` - Creation timestamp
-- `updatedAt` - Last update timestamp
+### Product Schemas
+- **products** - Main product information (name, description, category, brand, gender)
+- **product_variants** - Product variants (SKU, price, color, size, stock)
+- **product_images** - Product and variant images
+- **brands** - Product brands (Nike, etc.)
+- **categories** - Product categories with hierarchy support
+
+### Filter Schemas
+- **genders** - Gender categories (Men, Women, Unisex)
+- **colors** - Product colors with hex codes
+- **sizes** - Shoe sizes with sort ordering
+
+### User Schemas
+- **users** - User accounts (Better Auth)
+- **addresses** - Billing and shipping addresses
+- **reviews** - Product reviews and ratings
+- **wishlists** - User wishlists
+
+### Shopping Schemas
+- **carts** - Shopping carts (supports guest and authenticated users)
+- **cart_items** - Items in shopping carts
+- **orders** - Order information
+- **order_items** - Items in orders
+- **payments** - Payment transactions
+- **coupons** - Discount coupons
+
+### Collection Schemas
+- **collections** - Product collections (e.g., "New Arrivals", "Best Sellers")
+- **product_collections** - Many-to-many relationship between products and collections
+
+All tables use **UUID primary keys**, proper **foreign key relationships**, and include **Zod validation schemas** for type safety.
 
 ## Contributing
 
