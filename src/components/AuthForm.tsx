@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import SocialProviders from "./SocialProviders";
 import {useRouter} from "next/navigation";
+import { Mail, Lock, User, Eye, EyeOff } from 'lucide-react';
 
 type Props = {
   mode: "sign-in" | "sign-up";
@@ -68,48 +69,55 @@ export default function AuthForm({ mode, onSubmit }: Props) {
         {/* Full name input - Sign up only */}
         {mode === "sign-up" && (
           <div className="space-y-1">
-            <label htmlFor="name" className="text-caption text-dark-900">
+            <label htmlFor="name" className="text-caption text-dark-900 font-medium">
               Name
             </label>
-            <input
-              id="name"
-              name="name"
-              type="text"
-              placeholder="Enter your name"
-              className="w-full rounded-xl border border-light-300 bg-light-100 px-4 py-3 text-body text-dark-900 placeholder:text-dark-500 focus:outline-none focus:ring-2 focus:ring-dark-900/10"
-              autoComplete="name"
-            />
+            <div className="relative">
+                <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-dark-700" />
+                <input
+                    id="name"
+                    name="name"
+                    type="text"
+                    placeholder="Enter your name"
+                    className="w-full pl-12 pr-4 py-3 border-2 border-light-300 rounded-lg focus:border-dark-900 focus:outline-none transition-colors duration-200 text-body font-jost disabled:opacity-50"
+                    autoComplete="name"
+                />
+            </div>
           </div>
         )}
 
         {/* Email Input */}
         <div className="space-y-1">
-          <label htmlFor="email" className="text-caption text-dark-900">
+          <label htmlFor="email" className="text-caption text-dark-900 font-medium">
             Email
           </label>
-          <input
-            id="email"
-            name="email"
-            type="email"
-            placeholder="johndoe@gmail.com"
-            className="w-full rounded-xl border border-light-300 bg-light-100 px-4 py-3 text-body text-dark-900 placeholder:text-dark-500 focus:outline-none focus:ring-2 focus:ring-dark-900/10"
-            autoComplete="email"
-            required
-          />
+          <div className="relative">
+            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-dark-700" />
+            <input
+                id="email"
+                name="email"
+                type="email"
+                placeholder="johndoe@gmail.com"
+                className="w-full pl-12 pr-4 py-3 border-2 border-light-300 rounded-lg focus:border-dark-900 focus:outline-none transition-colors duration-200 text-body font-jost disabled:opacity-50"
+                autoComplete="email"
+                required
+            />
+          </div>
         </div>
         
         {/* Password input */}
         <div className="space-y-1">
-          <label htmlFor="password" className="text-caption text-dark-900">
+          <label htmlFor="password" className="text-caption text-dark-900 font-medium">
             Password
           </label>
           <div className="relative">
+            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-dark-700" />
             <input
               id="password"
               name="password"
               type={show ? "text" : "password"}
               placeholder="minimum 8 characters"
-              className="w-full rounded-xl border border-light-300 bg-light-100 px-4 py-3 pr-12 text-body text-dark-900 placeholder:text-dark-500 focus:outline-none focus:ring-2 focus:ring-dark-900/10"
+              className="w-full pl-12 pr-12 py-3 border-2 border-light-300 rounded-lg focus:border-dark-900 focus:outline-none transition-colors duration-200 text-body font-jost disabled:opacity-50"
               autoComplete={mode === "sign-in" ? "current-password" : "new-password"}
               minLength={8}
               required
@@ -120,7 +128,11 @@ export default function AuthForm({ mode, onSubmit }: Props) {
               onClick={() => setShow((v) => !v)}
               aria-label={show ? "Hide password" : "Show password"}
             >
-              {show ? "Hide" : "Show"}
+              {show ? (
+                <EyeOff className="w-5 h-5" />
+              ) : (
+                <Eye className="w-5 h-5" />
+              )}
             </button>
           </div>
         </div>

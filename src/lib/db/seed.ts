@@ -1,5 +1,6 @@
 import { drizzle } from 'drizzle-orm/neon-serverless';
 import { Pool } from '@neondatabase/serverless';
+import { eq } from 'drizzle-orm';
 import { config } from 'dotenv';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -43,9 +44,30 @@ function copyImageToUploads(sourcePath: string, filename: string, uploadDir: str
   }
 }
 
+async function clearDatabase() {
+  console.log('🗑️  Clearing existing data...\n');
+
+  // Delete in reverse order of dependencies
+  await db.delete(productCollections);
+  await db.delete(productImages);
+  await db.delete(productVariants);
+  await db.delete(products);
+  await db.delete(collections);
+  await db.delete(categories);
+  await db.delete(brands);
+  await db.delete(sizes);
+  await db.delete(colors);
+  await db.delete(genders);
+
+  console.log('✓ Database cleared\n');
+}
+
 async function seed() {
   try {
     console.log('🌱 Starting database seed...\n');
+
+    // Clear existing data first
+    await clearDatabase();
 
     // Setup image directory
     const uploadDir = setupStaticImageDirectory();
@@ -380,7 +402,7 @@ async function seed() {
       if (firstVariantId) {
         await db.update(products)
           .set({ defaultVariantId: firstVariantId })
-          .where({ id: insertedProduct.id } as any);
+          .where(eq(products.id, insertedProduct.id));
       }
 
       // Add to collections (randomize)
