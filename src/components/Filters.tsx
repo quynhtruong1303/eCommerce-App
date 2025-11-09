@@ -1,332 +1,374 @@
 'use client';
 
-import { useRouter, useSearchParams, usePathname } from 'next/navigation';
-import { useState, useEffect } from 'react';
-import {
-  parseQueryParams,
-  stringifyQueryParams,
-  toggleQueryArrayParam,
-  clearFilters,
-  getActiveFilters,
-  countActiveFilters,
-} from '@/lib/utils/query';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { useEffect, useMemo, useState } from 'react';
+import { parseQueryParams, toggleQueryArrayParam, stringifyQueryParams, clearFilters } from '@/lib/utils/query';
 import { FILTER_OPTIONS } from '@/lib/data/products';
-import { X, ChevronDown, ChevronUp } from 'lucide-react';
+import { SlidersHorizontal } from 'lucide-react';
 
-interface FiltersProps {
-  isOpen?: boolean;
-  onClose?: () => void;
-}
+type GroupKey = 'gender' | 'category' | 'size' | 'color' | 'priceRange';
 
-export default function Filters({ isOpen = false, onClose = () => {} }: FiltersProps) {
+export default function Filters() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const search = useMemo(() => `?${searchParams.toString()}`, [searchParams]);
 
-  // Parse current URL params
-  const currentParams = parseQueryParams(searchParams.toString());
-  const activeFilters = getActiveFilters(currentParams);
-  const filterCount = countActiveFilters(currentParams);
-
-  // Collapsible sections state
-  const [expandedSections, setExpandedSections] = useState({
+  const [open, setOpen] = useState(false);
+  const [expanded, setExpanded] = useState<Record<GroupKey, boolean>>({
     gender: true,
     category: true,
     size: true,
     color: true,
-    price: true,
+    priceRange: true,
   });
 
-  const toggleSection = (section: keyof typeof expandedSections) => {
-    setExpandedSections((prev) => ({
-      ...prev,
-      [section]: !prev[section],
-    }));
+  // Get active filter values
+  const getActiveValues = (key: string): string[] => {
+    const params = parseQueryParams(search);
+    const value = params[key];
+    if (!value) return [];
+    if (Array.isArray(value)) {
+      return value.flatMap(v => String(v).split('|')).filter(Boolean);
+    }
+    const stringValue = String(value);
+    return stringValue.includes('|') ? stringValue.split('|').filter(Boolean) : [stringValue];
   };
 
-  // Handle filter toggle
-  const handleFilterToggle = (filterType: string, value: string) => {
-    const updatedParams = toggleQueryArrayParam(currentParams, filterType, value);
+  const activeCounts = {
+    gender: getActiveValues('gender').length,
+    category: getActiveValues('category').length,
+    size: getActiveValues('size').length,
+    color: getActiveValues('color').length,
+    priceRange: getActiveValues('priceRange').length,
+  };
+
+  // Close mobile drawer when filters change
+  useEffect(() => {
+    setOpen(false);
+  }, [search]);
+
+  const onToggle = (key: GroupKey, value: string) => {
+    const currentParams = parseQueryParams(search);
+    const updatedParams = toggleQueryArrayParam(currentParams, key, value);
     const queryStr = stringifyQueryParams(updatedParams);
-    router.push(`${pathname}?${queryStr}`, { scroll: false });
+    router.push(queryStr ? `${pathname}?${queryStr}` : pathname, { scroll: false });
   };
 
-  // Check if a filter is active
-  const isFilterActive = (filterType: string, value: string): boolean => {
-    const filterValues = activeFilters[filterType as keyof typeof activeFilters];
-    return filterValues ? filterValues.includes(value) : false;
-  };
-
-  // Clear all filters
-  const handleClearFilters = () => {
+  const handleClearAll = () => {
+    const currentParams = parseQueryParams(search);
     const clearedParams = clearFilters(currentParams);
     const queryStr = stringifyQueryParams(clearedParams);
     router.push(queryStr ? `${pathname}?${queryStr}` : pathname, { scroll: false });
   };
 
-  // Close drawer on escape key
-  useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isOpen) {
-        onClose();
-      }
-    };
-
-    document.addEventListener('keydown', handleEscape);
-    return () => document.removeEventListener('keydown', handleEscape);
-  }, [isOpen, onClose]);
-
-  // Prevent body scroll when mobile drawer is open
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
-    }
-    return () => {
-      document.body.style.overflow = 'unset';
-    };
-  }, [isOpen]);
+  const Group = ({
+    title,
+    children,
+    k,
+  }: {
+    title: string;
+    children: import('react').ReactNode;
+    k: GroupKey;
+  }) => (
+    <div className="border-b border-light-300 py-4">
+      <button
+        className="flex w-full items-center justify-between text-body-medium text-dark-900"
+        onClick={() => setExpanded((s) => ({ ...s, [k]: !s[k] }))}
+        aria-expanded={expanded[k]}
+        aria-controls={`${k}-section`}
+      >
+        <span>{title}</span>
+        <span className="text-caption text-dark-700">{expanded[k] ? '−' : '+'}</span>
+      </button>
+      <div id={`${k}-section`} className={`${expanded[k] ? 'mt-3 block' : 'hidden'}`}>
+        {children}
+      </div>
+    </div>
+  );
 
   return (
     <>
-      {/* Mobile overlay */}
-      {isOpen && (
-        <div
-          className="fixed inset-0 bg-dark-900/50 z-40 lg:hidden"
-          onClick={onClose}
-          aria-hidden="true"
-        />
-      )}
-
-      {/* Filters sidebar/drawer */}
-      <aside
-        className={`
-          fixed lg:sticky top-0 left-0 h-screen lg:h-auto
-          w-80 lg:w-64
-          bg-light-100
-          z-50 lg:z-0
-          transform transition-transform duration-300 ease-in-out
-          ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
-          overflow-y-auto
-          border-r border-light-300
-        `}
+      {/* Mobile filter button - shows at top alongside Sort */}
+      <button
+        className="lg:hidden flex items-center gap-2 px-4 py-2 border border-light-300 rounded
+          hover:border-dark-700 transition-colors bg-light-100"
+        onClick={() => setOpen(true)}
+        aria-haspopup="dialog"
       >
-        <div className="p-6 lg:p-4">
-          {/* Mobile header */}
-          <div className="flex items-center justify-between mb-6 lg:hidden">
-            <h2 className="text-heading-3">Filters</h2>
-            <button
-              onClick={onClose}
-              className="p-2 hover:bg-light-200 rounded-full transition-colors"
-              aria-label="Close filters"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
+        <SlidersHorizontal className="w-5 h-5" />
+        <span className="text-body-medium">Filters</span>
+      </button>
 
-          {/* Desktop header */}
-          <div className="hidden lg:flex items-center justify-between mb-6">
-            <h2 className="text-heading-3">Filters</h2>
-            {filterCount > 0 && (
-              <button
-                onClick={handleClearFilters}
-                className="text-caption text-dark-700 hover:text-dark-900 transition-colors"
-              >
-                Clear All
-              </button>
-            )}
-          </div>
+      {/* Desktop sidebar - always visible on large screens */}
+      <aside className="sticky top-20 hidden h-fit min-w-60 rounded-lg border border-light-300 bg-light-100 p-4 lg:block">
+        <div className="mb-2 flex items-center justify-between">
+          <h3 className="text-body-medium text-dark-900">Filters</h3>
+          <button className="text-caption text-dark-700 underline" onClick={handleClearAll}>
+            Clear all
+          </button>
+        </div>
 
-          {/* Active filters count */}
-          {filterCount > 0 && (
-            <div className="mb-4 pb-4 border-b border-light-300">
-              <p className="text-caption text-dark-700">
-                {filterCount} filter{filterCount !== 1 ? 's' : ''} applied
-              </p>
-            </div>
-          )}
-
-          {/* Filter sections */}
-          <div className="space-y-6">
-            {/* Gender filter */}
-            <FilterSection
-              title="Gender"
-              isExpanded={expandedSections.gender}
-              onToggle={() => toggleSection('gender')}
-            >
-              <div className="space-y-3">
-                {FILTER_OPTIONS.genders.map((gender) => (
-                  <label
-                    key={gender}
-                    className="flex items-center cursor-pointer group"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={isFilterActive('gender', gender.toLowerCase())}
-                      onChange={() => handleFilterToggle('gender', gender.toLowerCase())}
-                      className="w-5 h-5 rounded border-2 border-dark-700 text-dark-900
-                        focus:ring-2 focus:ring-dark-900 focus:ring-offset-2 cursor-pointer"
-                    />
-                    <span className="ml-3 text-body group-hover:text-dark-900 transition-colors">
-                      {gender}
-                    </span>
-                  </label>
-                ))}
-              </div>
-            </FilterSection>
-
-            {/* Category filter */}
-            <FilterSection
-              title="Category"
-              isExpanded={expandedSections.category}
-              onToggle={() => toggleSection('category')}
-            >
-              <div className="space-y-3">
-                {FILTER_OPTIONS.categories.map((category) => (
-                  <label
-                    key={category}
-                    className="flex items-center cursor-pointer group"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={isFilterActive('category', category.toLowerCase())}
-                      onChange={() => handleFilterToggle('category', category.toLowerCase())}
-                      className="w-5 h-5 rounded border-2 border-dark-700 text-dark-900
-                        focus:ring-2 focus:ring-dark-900 focus:ring-offset-2 cursor-pointer"
-                    />
-                    <span className="ml-3 text-body group-hover:text-dark-900 transition-colors">
-                      {category}
-                    </span>
-                  </label>
-                ))}
-              </div>
-            </FilterSection>
-
-            {/* Size filter */}
-            <FilterSection
-              title="Size"
-              isExpanded={expandedSections.size}
-              onToggle={() => toggleSection('size')}
-            >
-              <div className="grid grid-cols-3 gap-2">
-                {FILTER_OPTIONS.sizes.map((size) => (
-                  <button
-                    key={size}
-                    onClick={() => handleFilterToggle('size', size.toLowerCase())}
-                    className={`
-                      py-2 px-3 text-body border-2 rounded transition-all
-                      ${
-                        isFilterActive('size', size.toLowerCase())
-                          ? 'border-dark-900 bg-dark-900 text-light-100'
-                          : 'border-light-300 hover:border-dark-700'
-                      }
-                    `}
-                  >
-                    {size}
-                  </button>
-                ))}
-              </div>
-            </FilterSection>
-
-            {/* Color filter */}
-            <FilterSection
-              title="Color"
-              isExpanded={expandedSections.color}
-              onToggle={() => toggleSection('color')}
-            >
-              <div className="grid grid-cols-5 gap-3">
-                {FILTER_OPTIONS.colors.map((color) => (
-                  <button
-                    key={color.name}
-                    onClick={() => handleFilterToggle('color', color.name.toLowerCase())}
-                    className={`
-                      w-10 h-10 rounded-full border-2 transition-all
-                      ${
-                        isFilterActive('color', color.name.toLowerCase())
-                          ? 'border-dark-900 ring-2 ring-dark-900 ring-offset-2'
-                          : 'border-light-300 hover:border-dark-700'
-                      }
-                    `}
-                    style={{ backgroundColor: color.hex }}
-                    aria-label={color.name}
-                    title={color.name}
+        {/* Gender filter */}
+        <Group title={`Gender ${activeCounts.gender ? `(${activeCounts.gender})` : ''}`} k="gender">
+          <ul className="space-y-2">
+            {FILTER_OPTIONS.genders.map((gender) => {
+              const value = gender.toLowerCase();
+              const checked = getActiveValues('gender').includes(value);
+              return (
+                <li key={gender} className="flex items-center gap-2">
+                  <input
+                    id={`gender-${value}`}
+                    type="checkbox"
+                    className="h-4 w-4 accent-dark-900"
+                    checked={checked}
+                    onChange={() => onToggle('gender', value)}
                   />
-                ))}
-              </div>
-            </FilterSection>
+                  <label htmlFor={`gender-${value}`} className="text-body text-dark-900">
+                    {gender}
+                  </label>
+                </li>
+              );
+            })}
+          </ul>
+        </Group>
 
-            {/* Price range filter */}
-            <FilterSection
-              title="Shop By Price"
-              isExpanded={expandedSections.price}
-              onToggle={() => toggleSection('price')}
-            >
-              <div className="space-y-3">
-                {FILTER_OPTIONS.priceRanges.map((range) => {
-                  const rangeKey = `${range.min}-${range.max}`;
+        {/* Category filter */}
+        <Group title={`Category ${activeCounts.category ? `(${activeCounts.category})` : ''}`} k="category">
+          <ul className="space-y-2">
+            {FILTER_OPTIONS.categories.map((category) => {
+              const value = category.toLowerCase();
+              const checked = getActiveValues('category').includes(value);
+              return (
+                <li key={category} className="flex items-center gap-2">
+                  <input
+                    id={`category-${value}`}
+                    type="checkbox"
+                    className="h-4 w-4 accent-dark-900"
+                    checked={checked}
+                    onChange={() => onToggle('category', value)}
+                  />
+                  <label htmlFor={`category-${value}`} className="text-body text-dark-900">
+                    {category}
+                  </label>
+                </li>
+              );
+            })}
+          </ul>
+        </Group>
+
+        {/* Size filter */}
+        <Group title={`Size ${activeCounts.size ? `(${activeCounts.size})` : ''}`} k="size">
+          <ul className="grid grid-cols-3 gap-2">
+            {FILTER_OPTIONS.sizes.map((size) => {
+              const value = size.toLowerCase();
+              const checked = getActiveValues('size').includes(value);
+              return (
+                <li key={size}>
+                  <label className="inline-flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      className="h-4 w-4 accent-dark-900"
+                      checked={checked}
+                      onChange={() => onToggle('size', value)}
+                    />
+                    <span className="text-body">{size}</span>
+                  </label>
+                </li>
+              );
+            })}
+          </ul>
+        </Group>
+
+        {/* Color filter */}
+        <Group title={`Color ${activeCounts.color ? `(${activeCounts.color})` : ''}`} k="color">
+          <ul className="grid grid-cols-2 gap-2">
+            {FILTER_OPTIONS.colors.map((color) => {
+              const value = color.name.toLowerCase();
+              const checked = getActiveValues('color').includes(value);
+              return (
+                <li key={color.name} className="flex items-center gap-2">
+                  <input
+                    id={`color-${value}`}
+                    type="checkbox"
+                    className="h-4 w-4 accent-dark-900"
+                    checked={checked}
+                    onChange={() => onToggle('color', value)}
+                  />
+                  <label htmlFor={`color-${value}`} className="text-body capitalize">
+                    {color.name}
+                  </label>
+                </li>
+              );
+            })}
+          </ul>
+        </Group>
+
+        {/* Price range filter */}
+        <Group title={`Price ${activeCounts.priceRange ? `(${activeCounts.priceRange})` : ''}`} k="priceRange">
+          <ul className="space-y-2">
+            {FILTER_OPTIONS.priceRanges.map((range) => {
+              const value = `${range.min}-${range.max}`;
+              const checked = getActiveValues('priceRange').includes(value);
+              return (
+                <li key={value} className="flex items-center gap-2">
+                  <input
+                    id={`price-${value}`}
+                    type="checkbox"
+                    className="h-4 w-4 accent-dark-900"
+                    checked={checked}
+                    onChange={() => onToggle('priceRange', value)}
+                  />
+                  <label htmlFor={`price-${value}`} className="text-body">
+                    {range.label}
+                  </label>
+                </li>
+              );
+            })}
+          </ul>
+        </Group>
+      </aside>
+
+      {/* Mobile drawer - conditional render */}
+      {open && (
+        <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true">
+          {/* Overlay */}
+          <div
+            className="absolute inset-0 bg-black/40"
+            aria-hidden="true"
+            onClick={() => setOpen(false)}
+          />
+
+          {/* Drawer panel */}
+          <div className="absolute inset-y-0 left-0 w-80 max-w-[80%] overflow-auto bg-light-100 p-4 shadow-xl">
+            <div className="mb-2 flex items-center justify-between">
+              <h3 className="text-body-medium">Filters</h3>
+              <button className="text-caption text-dark-700 underline" onClick={handleClearAll}>
+                Clear all
+              </button>
+            </div>
+
+            {/* Gender filter - mobile */}
+            <Group title="Gender" k="gender">
+              <ul className="space-y-2">
+                {FILTER_OPTIONS.genders.map((gender) => {
+                  const value = gender.toLowerCase();
+                  const checked = getActiveValues('gender').includes(value);
                   return (
-                    <label
-                      key={rangeKey}
-                      className="flex items-center cursor-pointer group"
-                    >
+                    <li key={gender} className="flex items-center gap-2">
                       <input
+                        id={`m-gender-${value}`}
                         type="checkbox"
-                        checked={isFilterActive('priceRange', rangeKey)}
-                        onChange={() => handleFilterToggle('priceRange', rangeKey)}
-                        className="w-5 h-5 rounded border-2 border-dark-700 text-dark-900
-                          focus:ring-2 focus:ring-dark-900 focus:ring-offset-2 cursor-pointer"
+                        className="h-4 w-4 accent-dark-900"
+                        checked={checked}
+                        onChange={() => onToggle('gender', value)}
                       />
-                      <span className="ml-3 text-body group-hover:text-dark-900 transition-colors">
-                        {range.label}
-                      </span>
-                    </label>
+                      <label htmlFor={`m-gender-${value}`} className="text-body">
+                        {gender}
+                      </label>
+                    </li>
                   );
                 })}
-              </div>
-            </FilterSection>
+              </ul>
+            </Group>
+
+            {/* Category filter - mobile */}
+            <Group title="Category" k="category">
+              <ul className="space-y-2">
+                {FILTER_OPTIONS.categories.map((category) => {
+                  const value = category.toLowerCase();
+                  const checked = getActiveValues('category').includes(value);
+                  return (
+                    <li key={category} className="flex items-center gap-2">
+                      <input
+                        id={`m-category-${value}`}
+                        type="checkbox"
+                        className="h-4 w-4 accent-dark-900"
+                        checked={checked}
+                        onChange={() => onToggle('category', value)}
+                      />
+                      <label htmlFor={`m-category-${value}`} className="text-body">
+                        {category}
+                      </label>
+                    </li>
+                  );
+                })}
+              </ul>
+            </Group>
+
+            {/* Size filter - mobile */}
+            <Group title="Size" k="size">
+              <ul className="grid grid-cols-3 gap-2">
+                {FILTER_OPTIONS.sizes.map((size) => {
+                  const value = size.toLowerCase();
+                  const checked = getActiveValues('size').includes(value);
+                  return (
+                    <li key={size}>
+                      <label className="inline-flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          className="h-4 w-4 accent-dark-900"
+                          checked={checked}
+                          onChange={() => onToggle('size', value)}
+                        />
+                        <span className="text-body">{size}</span>
+                      </label>
+                    </li>
+                  );
+                })}
+              </ul>
+            </Group>
+
+            {/* Color filter - mobile */}
+            <Group title="Color" k="color">
+              <ul className="grid grid-cols-2 gap-2">
+                {FILTER_OPTIONS.colors.map((color) => {
+                  const value = color.name.toLowerCase();
+                  const checked = getActiveValues('color').includes(value);
+                  return (
+                    <li key={color.name} className="flex items-center gap-2">
+                      <input
+                        id={`m-color-${value}`}
+                        type="checkbox"
+                        className="h-4 w-4 accent-dark-900"
+                        checked={checked}
+                        onChange={() => onToggle('color', value)}
+                      />
+                      <label htmlFor={`m-color-${value}`} className="text-body capitalize">
+                        {color.name}
+                      </label>
+                    </li>
+                  );
+                })}
+              </ul>
+            </Group>
+
+            {/* Price range filter - mobile */}
+            <Group title="Price" k="priceRange">
+              <ul className="space-y-2">
+                {FILTER_OPTIONS.priceRanges.map((range) => {
+                  const value = `${range.min}-${range.max}`;
+                  const checked = getActiveValues('priceRange').includes(value);
+                  return (
+                    <li key={value} className="flex items-center gap-2">
+                      <input
+                        id={`m-price-${value}`}
+                        type="checkbox"
+                        className="h-4 w-4 accent-dark-900"
+                        checked={checked}
+                        onChange={() => onToggle('priceRange', value)}
+                      />
+                      <label htmlFor={`m-price-${value}`} className="text-body">
+                        {range.label}
+                      </label>
+                    </li>
+                  );
+                })}
+              </ul>
+            </Group>
           </div>
-
-          {/* Mobile clear filters button */}
-          {filterCount > 0 && (
-            <button
-              onClick={handleClearFilters}
-              className="w-full mt-8 py-3 bg-dark-900 text-light-100 rounded-full
-                hover:bg-dark-700 transition-colors lg:hidden"
-            >
-              Clear All Filters
-            </button>
-          )}
         </div>
-      </aside>
+      )}
     </>
-  );
-}
-
-// Filter section component
-interface FilterSectionProps {
-  title: string;
-  isExpanded: boolean;
-  onToggle: () => void;
-  children: React.ReactNode;
-}
-
-function FilterSection({ title, isExpanded, onToggle, children }: FilterSectionProps) {
-  return (
-    <div className="border-b border-light-300 pb-6">
-      <button
-        onClick={onToggle}
-        className="flex items-center justify-between w-full mb-4 text-body-medium hover:text-dark-900 transition-colors"
-        aria-expanded={isExpanded}
-      >
-        {title}
-        {isExpanded ? (
-          <ChevronUp className="w-5 h-5" />
-        ) : (
-          <ChevronDown className="w-5 h-5" />
-        )}
-      </button>
-      {isExpanded && <div>{children}</div>}
-    </div>
   );
 }

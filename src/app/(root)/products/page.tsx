@@ -53,17 +53,25 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
           </h1>
         </div>
 
-        <div className="flex gap-8">
-          {/* Filters sidebar */}
+        {/* Mobile: Filter button and Sort bar */}
+        <div className="lg:hidden mb-6 flex items-center justify-between gap-4">
           <Filters />
+          <Sort />
+        </div>
+
+        <div className="flex gap-8">
+          {/* Desktop: Filters sidebar */}
+          <div className="hidden lg:block">
+            <Filters />
+          </div>
 
           {/* Main content */}
           <div className="flex-1">
-            {/* Active filters and sort bar */}
+            {/* Desktop: Sort bar */}
             <div className="mb-6">
-              <div className="flex items-center justify-between mb-4">
-                {/* Desktop: Results count */}
-                <div className="hidden lg:block">
+              <div className="hidden lg:flex items-center justify-between gap-4 mb-4">
+                {/* Results count */}
+                <div>
                   <span className="text-caption text-dark-700">
                     {totalCount} result{totalCount !== 1 ? 's' : ''}
                   </span>
