@@ -29,7 +29,7 @@ A modern eCommerce application built with Next.js, TypeScript, TailwindCSS, Bett
 
 ### Prerequisites
 
-- Node.js 18+
+- Node.js 15+
 - A Neon PostgreSQL database
 - npm or yarn
 
@@ -188,22 +188,6 @@ The product listing page (`/products`) is a fully functional server-side rendere
 - **Active Filter Display**: Removable badges showing current filters
 - **Empty States**: Graceful handling when no products match filters
 
-### URL Examples
-
-```bash
-# Men's products
-/products?gender=men
-
-# Women's running shoes, size US 9
-/products?gender=women&category=running&size=us%209
-
-# Multiple filters with pipe separator
-/products?gender=men|women&color=black|white
-
-# Sorted by price
-/products?sort=price_asc
-```
-
 ### Key Files
 
 - `/src/app/(root)/products/page.tsx` - Server component with filtering/sorting logic
@@ -212,22 +196,6 @@ The product listing page (`/products`) is a fully functional server-side rendere
 - `/src/lib/utils/query.ts` - URL query parameter utilities
 - `/src/lib/data/products.ts` - Mock product data (15 Nike products)
 
-### Query Parameter Format
-
-The implementation uses **pipe separator** (`|`) for multi-value filters:
-
-```
-?gender=men|women           # Multiple genders
-?size=us%208|us%209         # Multiple sizes
-?color=black|white|blue     # Multiple colors
-```
-
-This format ensures:
-- Clean, readable URLs
-- Proper handling by Next.js 15
-- No duplicate values
-- Easy sharing and bookmarking
-
 ## Contributing
 
 1. Fork the repository
@@ -235,7 +203,3 @@ This format ensures:
 3. Make your changes
 4. Add tests if applicable
 5. Submit a pull request
-
-## License
-
-This project is licensed under the MIT License.
