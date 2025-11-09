@@ -24,22 +24,28 @@ const Navbar = () => {
           <div className="hidden md:block">
             <div className="ml-10 flex items-baseline space-x-8">
               <Link
-                href="/men"
+                href="/products?gender=men"
                 className="text-dark-900 hover:text-dark-700 px-3 py-2 text-body font-jost font-medium transition-colors duration-200"
               >
                 Men
               </Link>
               <Link
-                href="/women"
+                href="/products?gender=women"
                 className="text-dark-900 hover:text-dark-700 px-3 py-2 text-body font-jost font-medium transition-colors duration-200"
               >
                 Women
               </Link>
               <Link
-                href="/kids"
+                href="/products?gender=unisex"
                 className="text-dark-900 hover:text-dark-700 px-3 py-2 text-body font-jost font-medium transition-colors duration-200"
               >
                 Kids
+              </Link>
+              <Link
+                href="/products"
+                className="text-dark-900 hover:text-dark-700 px-3 py-2 text-body font-jost font-medium transition-colors duration-200"
+              >
+                All Products
               </Link>
               <Link
                 href="/collections"

@@ -5,10 +5,13 @@ A modern eCommerce application built with Next.js, TypeScript, TailwindCSS, Bett
 ## Features
 
 - 🛍️ Product catalog with Nike items
+- 🔍 Advanced product filtering (Gender, Category, Size, Color, Price Range)
+- 🔄 Multiple sort options (Featured, Newest, Price)
+- 🔗 URL-based state management for shareable links
 - 🗄️ PostgreSQL database with Drizzle ORM
 - 🔐 Authentication with Better Auth
 - 🎨 Modern UI with TailwindCSS
-- 📱 Responsive design
+- 📱 Responsive design (Desktop sidebar / Mobile drawer)
 - 🛒 Shopping cart with Zustand state management
 - ⚡ Server-side rendering with Next.js 15
 
@@ -99,12 +102,19 @@ Open [http://localhost:3000](http://localhost:3000) to view the application.
 ```
 src/
 ├── app/                    # Next.js app directory
+│   ├── (root)/
+│   │   └── products/      # Product listing page (SSR)
 │   ├── api/               # API routes
 │   │   └── auth/          # Better Auth API routes
 │   └── page.tsx           # Homepage
 ├── components/            # React components
+│   ├── Filters.tsx        # Product filters (client component)
+│   ├── Sort.tsx           # Sort dropdown (client component)
+│   └── Card.tsx           # Product card
 ├── lib/                   # Utility libraries
 │   ├── auth.ts           # Better Auth configuration
+│   ├── data/
+│   │   └── products.ts   # Mock product data
 │   ├── db/               # Database configuration
 │   │   ├── index.ts      # Database connection
 │   │   ├── seed.ts       # Database seeding script
@@ -117,7 +127,9 @@ src/
 │   │       ├── categories.ts
 │   │       ├── orders.ts
 │   │       └── ...       # Other schemas
-│   └── store/            # Zustand stores
+│   ├── store/            # Zustand stores
+│   └── utils/
+│       └── query.ts      # URL query parameter utilities
 └── ...
 ```
 
@@ -156,6 +168,65 @@ The application uses a **normalized database schema** with the following tables:
 - **product_collections** - Many-to-many relationship between products and collections
 
 All tables use **UUID primary keys**, proper **foreign key relationships**, and include **Zod validation schemas** for type safety.
+
+## Product Listing Page
+
+The product listing page (`/products`) is a fully functional server-side rendered page with advanced filtering and sorting capabilities.
+
+### Features
+
+- **Server-Side Rendering**: Fast initial load with SEO-friendly HTML
+- **URL-Based State**: All filters sync to URL for shareable links and browser back/forward support
+- **Multiple Filters**:
+  - Gender (Men, Women, Unisex)
+  - Category (Lifestyle, Running, Basketball, Training, Skateboarding, Soccer)
+  - Size (US 7-13)
+  - Color (10 colors with visual swatches)
+  - Price Range (Under $75, $75-$100, $100-$150, Over $150)
+- **Sort Options**: Featured, Newest, Price (High to Low / Low to High)
+- **Responsive Design**: Desktop sidebar layout / Mobile drawer with overlay
+- **Active Filter Display**: Removable badges showing current filters
+- **Empty States**: Graceful handling when no products match filters
+
+### URL Examples
+
+```bash
+# Men's products
+/products?gender=men
+
+# Women's running shoes, size US 9
+/products?gender=women&category=running&size=us%209
+
+# Multiple filters with pipe separator
+/products?gender=men|women&color=black|white
+
+# Sorted by price
+/products?sort=price_asc
+```
+
+### Key Files
+
+- `/src/app/(root)/products/page.tsx` - Server component with filtering/sorting logic
+- `/src/components/Filters.tsx` - Client component for filter UI
+- `/src/components/Sort.tsx` - Client component for sort dropdown
+- `/src/lib/utils/query.ts` - URL query parameter utilities
+- `/src/lib/data/products.ts` - Mock product data (15 Nike products)
+
+### Query Parameter Format
+
+The implementation uses **pipe separator** (`|`) for multi-value filters:
+
+```
+?gender=men|women           # Multiple genders
+?size=us%208|us%209         # Multiple sizes
+?color=black|white|blue     # Multiple colors
+```
+
+This format ensures:
+- Clean, readable URLs
+- Proper handling by Next.js 15
+- No duplicate values
+- Easy sharing and bookmarking
 
 ## Contributing
 
